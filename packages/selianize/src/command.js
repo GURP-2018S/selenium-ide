@@ -94,7 +94,11 @@ export function emit(command) {
   return new Promise(async (res, rej) => {
     if (emitters[command.command]) {
       try {
-        let result = await emitters[command.command](command.target, command.value);
+        // Assertion Error 파트를 찾기 위함
+        let result = `// command_id : ${command.id}\n`;
+        result += await emitters[command.command](command.target, command.value);
+        // Jest/Selenium WebDriver 조합의 버그 해결
+        result = result.replace(/driver\.wait\(/, "driver.wait(async () => await ");
         res(result);
       } catch (e) {
         rej(e);
