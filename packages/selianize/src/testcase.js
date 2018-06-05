@@ -19,7 +19,7 @@ import CommandEmitter from "./command";
 
 export function emit(test) {
   return new Promise(async (res, rej) => { // eslint-disable-line no-unused-vars
-    let result = `it("${test.name}", () => {const driver = Runner.getDriver();return driver.then(() => {`;
+    let result = `it("${test.name}", () => {const driver = Runner.getDriver();return driver.then(async () => {`;
 
     let errors = [];
     result += (await Promise.all(test.commands.map((command, index) => (CommandEmitter.emit(command).catch(e => {
