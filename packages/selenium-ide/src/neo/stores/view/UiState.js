@@ -21,6 +21,7 @@ import SuiteState from "./SuiteState";
 import TestState from "./TestState";
 import PlaybackState from "./PlaybackState";
 import Command from "../../models/Command";
+import Manager from "../../../plugin/manager";
 
 class UiState {
   @observable selectedTest = {};
@@ -162,10 +163,22 @@ class UiState {
 
   @action.bound toggleRecord() {
     this.isRecording = !this.isRecording;
+    this.emitRecordingState();
   }
 
   @action.bound stopRecording() {
     this.isRecording = false;
+    this.emitRecordingState();
+  }
+
+  @action.bound emitRecordingState() {
+    Manager.emitMessage({
+      action: "event",
+      event: this.isRecording ? "recordingStarted" : "recordingStopped",
+      options: {
+        testName: this.selectedTest.test.name
+      }
+    });
   }
 
   @action.bound setSelectingTarget(isSelecting) {
@@ -310,7 +323,7 @@ class UiState {
     Object.values(this.testStates).forEach(state => {
       state.modified = false;
     });
-    this._project.modified = false;
+    this._project.setModified(false);
   }
 }
 

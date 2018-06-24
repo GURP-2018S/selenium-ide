@@ -19,6 +19,7 @@ import browser from "webextension-polyfill";
 import parser from "ua-parser-js";
 import { recorder } from "./editor";
 import Debugger from "../debugger";
+import variables from "../../stores/view/Variables";
 
 const parsedUA = parser(window.navigator.userAgent);
 
@@ -62,7 +63,7 @@ export default class ExtCommand {
     };
   }
 
-  init() {
+  init(baseUrl) {
     this.attach();
     this.playingTabNames = {};
     this.playingTabIds = {};
@@ -71,6 +72,7 @@ export default class ExtCommand {
     this.playingTabCount = 1;
     this.currentPlayingWindowId = this.contentWindowId;
     this.currentPlayingFrameLocation = "root";
+    this.baseUrl = baseUrl;
     return this.queryActiveTab(this.currentPlayingWindowId)
       .then(this.setFirstTab.bind(this));
   }
@@ -157,6 +159,11 @@ export default class ExtCommand {
     }, { frameId: top ? 0 : frameId });
   }
 
+  sendPayload(payload) {
+    let tabId = this.getCurrentPlayingTabId();
+    return browser.tabs.sendMessage(tabId, payload);
+  }
+
   setLoading(tabId) {
     // Does clearing the object will cause some problem(e.g. missing the frameId)?
     // Ans: Yes, but I don't know why
@@ -191,7 +198,13 @@ export default class ExtCommand {
     this.playingTabCount++;
   }
 
-  doOpen(url) {
+  doOpen(targetUrl) {
+    let url = targetUrl;
+    try {
+      url = (new URL(targetUrl)).href;
+    } catch (e) {
+      url = (new URL(targetUrl, this.baseUrl)).href;
+    }
     return browser.tabs.update(this.currentPlayingTabId, {
       url: url
     });
@@ -253,6 +266,11 @@ export default class ExtCommand {
     } else {
       return this.sendMessage("type", locator, value, top);
     }
+  }
+
+  doStore(string, varName) {
+    variables.addVariable(varName, string);
+    return Promise.resolve();
   }
 
   wait(...properties) {
@@ -349,6 +367,7 @@ export function isExtCommand(command) {
     case "selectFrame":
     case "selectWindow":
     case "setSpeed":
+    case "store":
     case "close":
       return true;
     default:
