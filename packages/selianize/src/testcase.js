@@ -21,6 +21,7 @@ const hooks = [];
 
 export function emit(test) {
   return new Promise(async (res, rej) => { // eslint-disable-line no-unused-vars
+
     const hookResults = await Promise.all(hooks.map((hook) => hook(test)));
 
     let result = `it("${test.name}", async () => {`;

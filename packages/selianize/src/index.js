@@ -26,8 +26,13 @@ export default function Selianize(project) {
   return new Promise(async (res, rej) => { // eslint-disable-line no-unused-vars
     let result = template.bootstrap();
 
+    result += `
+    // DO NOT REMOVE THE ID COMMENTS BELOW
+    // project_id: ${project.id}
+    `
+    
     result += await ConfigurationEmitter.emit(project);
-
+    
     const testsHashmap = project.tests.reduce((map, test) => {
       map[test.id] = test;
       return map;
